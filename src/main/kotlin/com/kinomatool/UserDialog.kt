@@ -10,6 +10,7 @@ import com.konomatool.java.SendHttpRequest
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.io.File
 import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -73,44 +74,83 @@ class UserDialog : DialogWrapper(true) {
         state?.srcPath = srcPath
         state?.launch = launch
 
-        var code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/disconnect", null, null)
+        var code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/disconnect", null, null, null)
         if (code == 200) {
-            code = SendHttpRequest.sendRequest("POST", "http://$ip:10000/disconnect", null, null)
+            code = SendHttpRequest.sendRequest("POST", "http://$ip:10000/disconnect", null, null, null)
             if (code == 200) {
                 code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/upload?path=applications" +
-                        "/$appName/application.xml&temporary=false", null, null)
+                        "/$appName/application.xml&temporary=false", null, null, null)
                 if (code == 200) {
                     var body = "<?xml version=\"1.0\" encoding=\"utf-8\"?><application " +
                             "xmlns=\"http://www.kinoma.com/kpr/application/1\" id=\"BlocksAppTest\" " +
                             "program=\"src/main\" title=\"$appName\"></application>"
                     code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/upload?path=" +
-                            "applications/$appName/application.xml&temporary=false", null, body)
+                            "applications/$appName/application.xml&temporary=false", null, body, null)
                     if (code == 200) {
-                        code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/" +
-                                "upload?path=applications/$appName/src/main.js&temporary=false", null,
-                            null)
-                        if (code == 200) {
-                            code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
-                                    "upload?path=applications/$appName/src/main.js&temporary=false", srcPath,
-                                null)
-                            if (code == 200) {
-                                if (launch) {
-                                    code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/launch?" +
-                                            "id=$appName&file=main.js", null, null)
-                                    if (code == 200) {
-                                        val launchBody = "{\n" +
-                                                "    \"debug\": false,\n" +
-                                                "    \"breakOnExceptions\": false,\n" +
-                                                "    \"temporary\": false,\n" +
-                                                "    \"application\": {\n" +
-                                                "        \"id\": \"$appName\",\n" +
-                                                "        \"app\": \"applications/$appName\"\n" +
-                                                "    }\n" +
-                                                "}"
-                                        SendHttpRequest.sendRequest("POST", "http://$ip:10000/launch?" +
-                                                "id=$appName&file=main.js", null, launchBody)
+                        val directory = File(srcPath)
+                        // Check if the given path is a directory
+                        if (!directory.isDirectory) {
+                            println("Error: Not a directory!")
+                        }
+
+                        // Get all files in the directory
+                        val files = directory.listFiles()
+                        files?.forEach { file ->
+                            if (file.isFile) {
+                                val fileName = file.name
+                                val filePath = srcPath + "\\$fileName"
+                                code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/" +
+                                        "upload?path=applications/$appName/src/$fileName&temporary=false", null,
+                                    null, null)
+                                if (code == 200) {
+                                    if (filePath.endsWith(".js")) {
+                                        code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
+                                                "upload?path=applications/$appName/src/$fileName&temporary=false", filePath,
+                                            null, null)
+                                    } else {
+                                        /*code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
+                                                "upload?path=applications/$appName/src/$fileName&temporary=false", null,
+                                            null, filePath)*/
                                     }
                                 }
+                            }
+                        }
+                        /*val assetsDirectory = File("$srcPath\\assets")
+                        // Check if the given path is a directory
+                        if (!assetsDirectory.isDirectory) {
+                            println("Error: assetsDirectory Not a directory!")
+                        }
+
+                        val assetsFiles = assetsDirectory.listFiles()
+                        assetsFiles?.forEach { file ->
+                            if (file.isFile) {
+                                val assetFileName = file.name
+                                val assetFilePath =  "$srcPath\\$assetFileName"
+                                code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/" +
+                                        "upload?path=applications/$appName/src/assets/$assetFileName&temporary=false",
+                                    null, null, null)
+                                if (code == 200) {
+                                    code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
+                                            "upload?path=applications/$appName/src/assets/$assetFileName&temporary=false",
+                                        null, null, assetFilePath)
+                                }
+                            }
+                        }*/
+                        if (launch) {
+                            code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/launch?" +
+                                    "id=$appName&file=main.js", null, null, null)
+                            if (code == 200) {
+                                val launchBody = "{\n" +
+                                        "    \"debug\": false,\n" +
+                                        "    \"breakOnExceptions\": false,\n" +
+                                        "    \"temporary\": false,\n" +
+                                        "    \"application\": {\n" +
+                                        "        \"id\": \"$appName\",\n" +
+                                        "        \"app\": \"applications/$appName\"\n" +
+                                        "    }\n" +
+                                        "}"
+                                SendHttpRequest.sendRequest("POST", "http://$ip:10000/launch?" +
+                                        "id=$appName&file=main.js", null, launchBody, null)
                             }
                         }
                     }

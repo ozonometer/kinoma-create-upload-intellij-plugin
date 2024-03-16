@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SendHttpRequest {
-    public static int sendRequest(String type, String urlString, String bodyFilePath, String body) throws Exception {
+    public static int sendRequest(String type, String urlString, String bodyFilePath, String body, String assetsPath)
+            throws Exception {
 
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -21,23 +22,30 @@ public class SendHttpRequest {
 
         if (bodyFilePath != null) {
             // Read body from JavaScript file
-            /*FileInputStream inputStream = new FileInputStream(bodyFilePath);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            StringBuilder bodyBuilder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                bodyBuilder.append(line);
-            }
-            String requestBody = bodyBuilder.toString();*/
             File file = new File(bodyFilePath);
             String requestBody = FileUtils.readFileToString(file, "UTF-8");
             // Write body to the connection
             try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
                 outputStream.write(requestBody.getBytes(StandardCharsets.UTF_8));
             }
+        }
+        if (assetsPath != null) {
+            // Read body from file
+            FileInputStream inputStream = new FileInputStream(bodyFilePath);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            StringBuilder bodyBuilder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                bodyBuilder.append(line);
+            }
+            String requestBody = bodyBuilder.toString();
+            // Write body to the connection
+            try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+                outputStream.write(requestBody.getBytes(StandardCharsets.UTF_8));
+            }
             // Close resources
-            /*reader.close();
-            inputStream.close();*/
+            reader.close();
+            inputStream.close();
         }
         if (body != null) {
             // Write body content to the connection
