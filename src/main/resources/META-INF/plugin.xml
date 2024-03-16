@@ -24,12 +24,12 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
+        <applicationService serviceImplementation="com.kinomatool.KinomaConfigs"/>
     </extensions>
     <actions>
         <group id="mykola.kinoma-tool" text="Kinoma">
             <add-to-group group-id="MainMenu" anchor="last"/>
-            <action class="com.kinomatool.SendAction" id="Kionomatool.SendAction" text="Sent Action"/>
+            <action class="com.kinomatool.SendAction" id="Kionomatool.SendAction" text="Run App"/>
         </group>
     </actions>
 </idea-plugin>
