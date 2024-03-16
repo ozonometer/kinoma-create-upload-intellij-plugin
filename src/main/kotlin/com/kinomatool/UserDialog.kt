@@ -74,18 +74,20 @@ class UserDialog : DialogWrapper(true) {
         state?.srcPath = srcPath
         state?.launch = launch
 
-        var code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/disconnect", null, null, null)
+        var code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/disconnect",
+            "application/javascript", null, null)
         if (code == 200) {
-            code = SendHttpRequest.sendRequest("POST", "http://$ip:10000/disconnect", null, null, null)
+            code = SendHttpRequest.sendRequest("POST", "http://$ip:10000/disconnect",
+                "application/javascript", null, null)
             if (code == 200) {
                 code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/upload?path=applications" +
-                        "/$appName/application.xml&temporary=false", null, null, null)
+                        "/$appName/application.xml&temporary=false", "application/javascript", null, null)
                 if (code == 200) {
                     var body = "<?xml version=\"1.0\" encoding=\"utf-8\"?><application " +
-                            "xmlns=\"http://www.kinoma.com/kpr/application/1\" id=\"BlocksAppTest\" " +
+                            "xmlns=\"http://www.kinoma.com/kpr/application/1\" id=\"$appName\" " +
                             "program=\"src/main\" title=\"$appName\"></application>"
                     code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/upload?path=" +
-                            "applications/$appName/application.xml&temporary=false", null, body, null)
+                            "applications/$appName/application.xml&temporary=false", "application/javascript", null, body)
                     if (code == 200) {
                         val directory = File(srcPath)
                         // Check if the given path is a directory
@@ -100,17 +102,19 @@ class UserDialog : DialogWrapper(true) {
                                 val fileName = file.name
                                 val filePath = srcPath + "\\$fileName"
                                 code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/" +
-                                        "upload?path=applications/$appName/src/$fileName&temporary=false", null,
-                                    null, null)
+                                        "upload?path=applications/$appName/src/$fileName&temporary=false",
+                                    "application/javascript", null, null)
                                 if (code == 200) {
                                     if (filePath.endsWith(".js")) {
                                         code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
-                                                "upload?path=applications/$appName/src/$fileName&temporary=false", filePath,
-                                            null, null)
+                                                "upload?path=applications/$appName/src/$fileName&temporary=false",
+                                            "application/javascript", filePath, null)
                                     } else {
-                                        /*code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
-                                                "upload?path=applications/$appName/src/$fileName&temporary=false", null,
-                                            null, filePath)*/
+                                        /*val fileExtention: String = filePath.substringAfterLast(".")
+                                            //.replace(".", "")
+                                        code = SendHttpRequest.sendRequest("PUT", "http://$ip:10000/" +
+                                                "upload?path=applications/$appName/src/$fileName&temporary=false",
+                                            "image/$fileExtention", filePath, null)*/
                                     }
                                 }
                             }
@@ -138,7 +142,7 @@ class UserDialog : DialogWrapper(true) {
                         }*/
                         if (launch) {
                             code = SendHttpRequest.sendRequest("OPTIONS", "http://$ip:10000/launch?" +
-                                    "id=$appName&file=main.js", null, null, null)
+                                    "id=$appName&file=main.js", "application/javascript", null, null)
                             if (code == 200) {
                                 val launchBody = "{\n" +
                                         "    \"debug\": false,\n" +
@@ -150,7 +154,7 @@ class UserDialog : DialogWrapper(true) {
                                         "    }\n" +
                                         "}"
                                 SendHttpRequest.sendRequest("POST", "http://$ip:10000/launch?" +
-                                        "id=$appName&file=main.js", null, launchBody, null)
+                                        "id=$appName&file=main.js", "application/javascript", null, launchBody)
                             }
                         }
                     }
